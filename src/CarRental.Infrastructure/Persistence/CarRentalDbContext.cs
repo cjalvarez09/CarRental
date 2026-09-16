@@ -15,16 +15,23 @@ public class CarRentalDbContext(DbContextOptions<CarRentalDbContext> options) : 
         modelBuilder.Entity<Car>()
             .HasMany(car => car.Services)
             .WithOne()
+            .HasForeignKey("CarId")
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Rental>()
-            .HasOne(rental => rental.Customer)
-            .WithMany()
-            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Rental>(builder =>
+        {
+            builder.Property(rental => rental.Status)
+                .HasConversion<string>();
 
-        modelBuilder.Entity<Rental>()
-            .HasOne(rental => rental.Car)
-            .WithMany()
-            .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(rental => rental.Customer)
+                .WithMany()
+                .HasForeignKey(rental => rental.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(rental => rental.Car)
+                .WithMany()
+                .HasForeignKey(rental => rental.CarId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }

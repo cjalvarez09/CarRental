@@ -1,4 +1,7 @@
+using CarRental.Application.Common.Interfaces;
+using CarRental.Domain.Repositories;
 using CarRental.Infrastructure.Persistence;
+using CarRental.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +16,11 @@ public static class DependencyInjection
             ?? "Data Source=carrental.db";
 
         services.AddDbContext<CarRentalDbContext>(options => options.UseSqlite(connectionString));
+
+        services.AddScoped<ICarRepository, CarRepository>();
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IRentalRepository, RentalRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }
