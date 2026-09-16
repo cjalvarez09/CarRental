@@ -37,5 +37,9 @@ public class CarRepository(CarRentalDbContext dbContext) : ICarRepository
     public async Task AddAsync(Car car, CancellationToken cancellationToken = default) =>
         await dbContext.Cars.AddAsync(car, cancellationToken);
 
-    public void Remove(Car car) => dbContext.Cars.Remove(car);
+    public void Remove(Car car)
+    {
+        car.IsDeleted = true;
+        car.DeletedAtUtc = DateTime.UtcNow;
+    }
 }

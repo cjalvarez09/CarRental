@@ -15,5 +15,9 @@ public class CustomerRepository(CarRentalDbContext dbContext) : ICustomerReposit
     public async Task AddAsync(Customer customer, CancellationToken cancellationToken = default) =>
         await dbContext.Customers.AddAsync(customer, cancellationToken);
 
-    public void Remove(Customer customer) => dbContext.Customers.Remove(customer);
+    public void Remove(Customer customer)
+    {
+        customer.IsDeleted = true;
+        customer.DeletedAtUtc = DateTime.UtcNow;
+    }
 }
