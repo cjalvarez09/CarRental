@@ -1,3 +1,4 @@
+using CarRental.API.ExceptionHandling;
 using CarRental.Application;
 using CarRental.Infrastructure;
 using CarRental.Infrastructure.Persistence;
@@ -13,6 +14,9 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -24,6 +28,8 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<CarRentalDbContext>();
     dbContext.Database.EnsureCreated();
 }
+
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
