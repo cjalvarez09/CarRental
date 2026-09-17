@@ -1,6 +1,7 @@
 using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Common.Models;
 using CarRental.Domain.Entities;
+using CarRental.Domain.Enums;
 using CarRental.Domain.Exceptions;
 using CarRental.Domain.Repositories;
 using MediatR;
@@ -22,6 +23,7 @@ public class RegisterCommandHandler(
         {
             Username = request.Username,
             PasswordHash = passwordHasher.Hash(request.Password),
+            Role = Enum.Parse<UserRole>(request.Role, ignoreCase: true),
             CreatedAtUtc = DateTime.UtcNow
         };
 

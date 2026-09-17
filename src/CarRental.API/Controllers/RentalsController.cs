@@ -3,6 +3,7 @@ using CarRental.Application.Rentals.Commands.CancelRental;
 using CarRental.Application.Rentals.Commands.ModifyRental;
 using CarRental.Application.Rentals.Commands.RegisterRental;
 using CarRental.Application.Rentals.Queries.GetRentalById;
+using CarRental.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +24,7 @@ public class RentalsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(RentalDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<RentalDto>> GetById(int id, CancellationToken cancellationToken)
     {
@@ -31,6 +33,7 @@ public class RentalsController(ISender sender) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(RentalDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<RentalDto>> Modify(int id, ModifyRentalRequest request, CancellationToken cancellationToken)
     {
@@ -39,6 +42,7 @@ public class RentalsController(ISender sender) : ControllerBase
     }
 
     [HttpPost("{id:int}/cancel")]
+    [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Cancel(int id, CancellationToken cancellationToken)
     {

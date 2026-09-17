@@ -5,6 +5,7 @@ using CarRental.Application.Cars.Queries.CheckAvailability;
 using CarRental.Application.Cars.Queries.GetAllCars;
 using CarRental.Application.Cars.Queries.GetCarById;
 using CarRental.Application.Common.Models;
+using CarRental.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,7 @@ namespace CarRental.API.Controllers;
 public class CarsController(ISender sender) : ControllerBase
 {
     [HttpGet]
+    [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(IReadOnlyList<CarDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<CarDto>>> GetAll(CancellationToken cancellationToken)
     {
@@ -25,6 +27,7 @@ public class CarsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(CarDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<CarDto>> GetById(int id, CancellationToken cancellationToken)
     {
@@ -46,6 +49,7 @@ public class CarsController(ISender sender) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(CarDto), StatusCodes.Status201Created)]
     public async Task<ActionResult<CarDto>> Create(CreateCarCommand command, CancellationToken cancellationToken)
     {
@@ -54,6 +58,7 @@ public class CarsController(ISender sender) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(CarDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<CarDto>> Update(int id, UpdateCarRequest request, CancellationToken cancellationToken)
     {
@@ -62,6 +67,7 @@ public class CarsController(ISender sender) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {

@@ -3,4 +3,4 @@ using MediatR;
 
 namespace CarRental.Application.Auth.Commands.Register;
 
-public record RegisterCommand(string Username, string Password) : IRequest<UserDto>;
+public record RegisterCommand(string Username, string Password, string Role) : IRequest<UserDto>;
