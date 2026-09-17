@@ -1,5 +1,6 @@
 using CarRental.Application.Common.Interfaces;
 using CarRental.Domain.Repositories;
+using CarRental.Infrastructure.Caching;
 using CarRental.Infrastructure.Persistence;
 using CarRental.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,9 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IRentalRepository, RentalRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddMemoryCache();
+        services.AddSingleton<ICacheService, MemoryCacheService>();
 
         return services;
     }
