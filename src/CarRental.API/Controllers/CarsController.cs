@@ -6,12 +6,14 @@ using CarRental.Application.Cars.Queries.GetAllCars;
 using CarRental.Application.Cars.Queries.GetCarById;
 using CarRental.Application.Common.Models;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarRental.API.Controllers;
 
 [ApiController]
 [Route("api/cars")]
+[Authorize]
 public class CarsController(ISender sender) : ControllerBase
 {
     [HttpGet]

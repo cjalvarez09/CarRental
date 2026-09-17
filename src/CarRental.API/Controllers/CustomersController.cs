@@ -5,12 +5,14 @@ using CarRental.Application.Customers.Commands.UpdateCustomer;
 using CarRental.Application.Customers.Queries.GetAllCustomers;
 using CarRental.Application.Customers.Queries.GetCustomerById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarRental.API.Controllers;
 
 [ApiController]
 [Route("api/customers")]
+[Authorize]
 public class CustomersController(ISender sender) : ControllerBase
 {
     [HttpGet]

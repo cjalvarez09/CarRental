@@ -48,6 +48,7 @@ public class GlobalExceptionHandler(
     {
         FluentValidation.ValidationException => (StatusCodes.Status400BadRequest, "Validation failed"),
         NotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
+        InvalidCredentialsException => (StatusCodes.Status401Unauthorized, "Invalid credentials"),
         DomainException => (StatusCodes.Status409Conflict, "Business rule violation"),
         _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred")
     };

@@ -4,12 +4,14 @@ using CarRental.Application.Rentals.Commands.ModifyRental;
 using CarRental.Application.Rentals.Commands.RegisterRental;
 using CarRental.Application.Rentals.Queries.GetRentalById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarRental.API.Controllers;
 
 [ApiController]
 [Route("api/rentals")]
+[Authorize]
 public class RentalsController(ISender sender) : ControllerBase
 {
     [HttpPost]

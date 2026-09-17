@@ -11,6 +11,7 @@ public class CarRentalDbContext(DbContextOptions<CarRentalDbContext> options) : 
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Rental> Rentals => Set<Rental>();
     public DbSet<Service> Services => Set<Service>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -19,6 +20,10 @@ public class CarRentalDbContext(DbContextOptions<CarRentalDbContext> options) : 
             .WithOne()
             .HasForeignKey("CarId")
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<User>()
+            .HasIndex(user => user.Username)
+            .IsUnique();
 
         modelBuilder.Entity<Rental>(builder =>
         {

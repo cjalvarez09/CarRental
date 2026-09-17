@@ -3,6 +3,7 @@ using CarRental.Domain.Repositories;
 using CarRental.Infrastructure.Caching;
 using CarRental.Infrastructure.Persistence;
 using CarRental.Infrastructure.Persistence.Repositories;
+using CarRental.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,10 +22,14 @@ public static class DependencyInjection
         services.AddScoped<ICarRepository, CarRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IRentalRepository, RentalRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddMemoryCache();
         services.AddSingleton<ICacheService, MemoryCacheService>();
+
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         return services;
     }
