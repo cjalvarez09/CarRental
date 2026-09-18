@@ -1,3 +1,4 @@
+using CarRental.Application.Common.Caching;
 using CarRental.Application.Common.Models;
 using MediatR;
 
@@ -9,4 +10,8 @@ public record RegisterCommand(
     string Role,
     string? FullName,
     string? Address,
-    string? Email) : IRequest<UserDto>;
+    string? Email) : IRequest<UserDto>, ICacheInvalidatingCommand
+{
+    // Registering a Customer also creates its Customer profile.
+    public IReadOnlyCollection<string> CacheTagsToInvalidate => ["customers"];
+}

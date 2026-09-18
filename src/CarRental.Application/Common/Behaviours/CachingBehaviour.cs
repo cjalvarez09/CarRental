@@ -6,7 +6,7 @@ namespace CarRental.Application.Common.Behaviours;
 
 public class CachingBehaviour<TRequest, TResponse>(ICacheService cacheService)
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull
 {
     public Task<TResponse> Handle(
         TRequest request,

@@ -6,7 +6,7 @@ namespace CarRental.Application.Common.Behaviours;
 
 public class CacheInvalidationBehaviour<TRequest, TResponse>(ICacheService cacheService)
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull
 {
     public async Task<TResponse> Handle(
         TRequest request,
