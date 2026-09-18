@@ -72,6 +72,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

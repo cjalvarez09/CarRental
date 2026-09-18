@@ -15,11 +15,13 @@ namespace CarRental.API.Controllers;
 [ApiController]
 [Route("api/cars")]
 [Authorize]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
 public class CarsController(ISender sender) : ControllerBase
 {
     [HttpGet]
     [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(IReadOnlyList<CarDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<IReadOnlyList<CarDto>>> GetAll(CancellationToken cancellationToken)
     {
         var cars = await sender.Send(new GetAllCarsQuery(), cancellationToken);
@@ -29,6 +31,8 @@ public class CarsController(ISender sender) : ControllerBase
     [HttpGet("{id:int}")]
     [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(CarDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CarDto>> GetById(int id, CancellationToken cancellationToken)
     {
         var car = await sender.Send(new GetCarByIdQuery(id), cancellationToken);
@@ -51,6 +55,8 @@ public class CarsController(ISender sender) : ControllerBase
     [HttpPost]
     [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(CarDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<CarDto>> Create(CreateCarCommand command, CancellationToken cancellationToken)
     {
         var car = await sender.Send(command, cancellationToken);
@@ -60,6 +66,9 @@ public class CarsController(ISender sender) : ControllerBase
     [HttpPut("{id:int}")]
     [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(CarDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CarDto>> Update(int id, UpdateCarRequest request, CancellationToken cancellationToken)
     {
         var car = await sender.Send(new UpdateCarCommand(id, request.Type, request.Model), cancellationToken);
@@ -69,6 +78,9 @@ public class CarsController(ISender sender) : ControllerBase
     [HttpDelete("{id:int}")]
     [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await sender.Send(new DeleteCarCommand(id), cancellationToken);

@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CarRental.API.ExceptionHandling;
 
-public class GlobalExceptionHandler(
-    IProblemDetailsService problemDetailsService,
-    ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
+public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
@@ -36,12 +34,13 @@ public class GlobalExceptionHandler(
                 .ToDictionary(group => group.Key, group => group.Select(failure => failure.ErrorMessage).ToArray());
         }
 
-        return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
-        {
-            HttpContext = httpContext,
-            Exception = exception,
-            ProblemDetails = problemDetails
-        });
+        // Write the JSON directly instead of relying on IProblemDetailsService's content
+        // negotiation against the Accept header, which can silently fail to match (e.g.
+        // some browser-originated fetches) and fall back to a bodyless generic response.
+        httpContext.Response.ContentType = "application/problem+json";
+        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+
+        return true;
     }
 
     private static (int StatusCode, string Title) MapException(Exception exception) => exception switch

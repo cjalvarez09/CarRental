@@ -14,6 +14,8 @@ public class AuthController(ISender sender) : ControllerBase
 {
     [HttpPost("register")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<UserDto>> Register(RegisterCommand command, CancellationToken cancellationToken)
     {
         var user = await sender.Send(command, cancellationToken);
@@ -22,6 +24,8 @@ public class AuthController(ISender sender) : ControllerBase
 
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AuthResultDto>> Login(LoginCommand command, CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);

@@ -14,11 +14,13 @@ namespace CarRental.API.Controllers;
 [ApiController]
 [Route("api/customers")]
 [Authorize]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
 public class CustomersController(ISender sender) : ControllerBase
 {
     [HttpGet]
     [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(IReadOnlyList<CustomerDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<IReadOnlyList<CustomerDto>>> GetAll(CancellationToken cancellationToken)
     {
         var customers = await sender.Send(new GetAllCustomersQuery(), cancellationToken);
@@ -28,6 +30,8 @@ public class CustomersController(ISender sender) : ControllerBase
     [HttpGet("{id:int}")]
     [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(CustomerDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CustomerDto>> GetById(int id, CancellationToken cancellationToken)
     {
         var customer = await sender.Send(new GetCustomerByIdQuery(id), cancellationToken);
@@ -36,6 +40,7 @@ public class CustomersController(ISender sender) : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(CustomerDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CustomerDto>> Register(RegisterCustomerCommand command, CancellationToken cancellationToken)
     {
         var customer = await sender.Send(command, cancellationToken);
@@ -45,6 +50,9 @@ public class CustomersController(ISender sender) : ControllerBase
     [HttpPut("{id:int}")]
     [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(CustomerDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CustomerDto>> Update(int id, UpdateCustomerRequest request, CancellationToken cancellationToken)
     {
         var customer = await sender.Send(
@@ -55,6 +63,9 @@ public class CustomersController(ISender sender) : ControllerBase
     [HttpDelete("{id:int}")]
     [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await sender.Send(new DeleteCustomerCommand(id), cancellationToken);
