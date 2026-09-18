@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY src/CarRental.API/CarRental.API.csproj src/CarRental.API/
-COPY src/Application/Application.csproj src/Application/
+COPY src/CarRental.Application/CarRental.Application.csproj src/CarRental.Application/
 COPY src/CarRental.Domain/CarRental.Domain.csproj src/CarRental.Domain/
 COPY src/CarRental.Infrastructure/CarRental.Infrastructure.csproj src/CarRental.Infrastructure/
 RUN dotnet restore src/CarRental.API/CarRental.API.csproj
