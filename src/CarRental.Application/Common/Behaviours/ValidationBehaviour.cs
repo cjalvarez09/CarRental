@@ -15,9 +15,10 @@ public class ValidationBehaviour<TRequest, TResponse>(IEnumerable<IValidator<TRe
         if (!validators.Any())
             return await next();
 
-        var context = new ValidationContext<TRequest>(request);
-
-        var failures = (await Task.WhenAll(validators.Select(validator => validator.ValidateAsync(context, cancellationToken))))
+        // Each validator needs its own context: a shared one accumulates failures across validators,
+        // so every result would also contain the failures of the others.
+        var failures = (await Task.WhenAll(validators.Select(validator =>
+                validator.ValidateAsync(new ValidationContext<TRequest>(request), cancellationToken))))
             .SelectMany(result => result.Errors)
             .ToList();
 

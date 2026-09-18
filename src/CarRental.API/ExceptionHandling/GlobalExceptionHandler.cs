@@ -37,8 +37,8 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
         // Write the JSON directly instead of relying on IProblemDetailsService's content
         // negotiation against the Accept header, which can silently fail to match (e.g.
         // some browser-originated fetches) and fall back to a bodyless generic response.
-        httpContext.Response.ContentType = "application/problem+json";
-        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(
+            problemDetails, options: null, contentType: "application/problem+json", cancellationToken);
 
         return true;
     }
