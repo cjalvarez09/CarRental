@@ -183,6 +183,12 @@ Business rule error:
 
 The 401 for a missing or invalid token and the 403 for a wrong role are produced by the authentication middleware, so they only carry the standard fields (`type`, `title`, `status`, `traceId`) and no `detail`.
 
+## CORS
+
+Browsers can call the API from the origins listed in `Cors:AllowedOrigins` in `appsettings.json`, which by default is just `http://localhost:4200` (the Angular dev server). Any header and method is allowed, and the `Authorization` header works, so the bearer token can be sent normally. Error responses carry the CORS headers too, so the front end can read the problem details instead of getting an opaque network error.
+
+To allow another origin, add it to that list or set it with an environment variable, for example `Cors__AllowedOrigins__1=https://my-frontend.example.com`.
+
 ## Caching
 
 Read endpoints (lists, get by id, availability) are cached in memory for 5 minutes. Any write that could change what they return clears the related cache entries, so clients shouldn't notice it. It's a per instance cache, see the notes in the README.
