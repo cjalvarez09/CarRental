@@ -16,7 +16,7 @@ Everything except `register` and `login` needs a JWT in the `Authorization: Bear
 
 There are two roles:
 
-- **Customer**: can check availability and book a car. Nothing else.
+- **Customer**: can check availability, book a car and cancel their own bookings while they haven't started. Nothing else.
 - **Employee**: can do everything, including booking on behalf of any customer.
 
 When a Customer books, the API ignores the `customerId` in the request and uses the customer profile linked to their own account, so nobody can book in someone else's name.
@@ -80,7 +80,7 @@ Response `200`:
 | POST | `/api/rentals` | Customer, Employee | 201 | 400, 401, 404, 409 |
 | GET | `/api/rentals/{id}` | Employee | 200 | 401, 403, 404 |
 | PUT | `/api/rentals/{id}` | Employee | 200 | 400, 401, 403, 404, 409 |
-| POST | `/api/rentals/{id}/cancel` | Employee | 204 | 401, 403, 404, 409 |
+| POST | `/api/rentals/{id}/cancel` | Customer (own rentals), Employee | 204 | 401, 404, 409 |
 
 ### Cars
 
@@ -143,6 +143,8 @@ Rules:
 
 **Cancel**: `POST /api/rentals/{id}/cancel`, no body. Sets the status to `Cancelled` and frees the car for those dates. Cancelling twice gives `409`.
 
+A customer can only cancel their own rentals, and only before they start: if the start date is today or earlier the rental counts as in progress and the API answers `409`. Asking to cancel a rental that belongs to another customer gives `404`, as if it didn't exist. Employees can cancel any rental at any time.
+
 `status` is either `Active` or `Cancelled`.
 
 ## Errors
@@ -154,8 +156,8 @@ Every error is an [RFC 7807](https://www.rfc-editor.org/rfc/rfc7807) problem det
 | 400 | Validation failed. The `errors` object lists the messages per field. |
 | 401 | No token, invalid or expired token, or wrong credentials on login. |
 | 403 | Valid token but the role isn't allowed to use that endpoint. |
-| 404 | The resource doesn't exist (or was soft deleted). |
-| 409 | A business rule was broken: username already taken, car not available, deleting something that has rentals, cancelling a cancelled rental. |
+| 404 | The resource doesn't exist (or was soft deleted), or a customer tried to cancel a rental that isn't theirs. |
+| 409 | A business rule was broken: username already taken, car not available, deleting something that has rentals, cancelling a cancelled rental, a customer cancelling a rental that already started. |
 | 500 | Something unexpected. The message is generic on purpose, details only go to the logs. |
 
 Validation error:

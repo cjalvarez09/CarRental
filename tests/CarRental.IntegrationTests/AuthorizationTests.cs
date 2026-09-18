@@ -62,7 +62,7 @@ public class AuthorizationTests(CarRentalApiFactory factory) : IClassFixture<Car
     }
 
     [Fact]
-    public async Task Given_ACustomerWithARental_When_TheyTryToCancelIt_Then_Returns403AndTheRentalStaysActive()
+    public async Task Given_ACustomer_When_ReadingARentalById_Then_Returns403()
     {
         // Given
         var employee = await factory.RegisterEmployeeAsync();
@@ -72,12 +72,10 @@ public class AuthorizationTests(CarRentalApiFactory factory) : IClassFixture<Car
         var rental = (await booking.Content.ReadFromJsonAsync<RentalDto>())!;
 
         // When
-        var cancel = await customer.Client.PostAsync($"/api/rentals/{rental.Id}/cancel", content: null);
+        var response = await customer.Client.GetAsync($"/api/rentals/{rental.Id}");
 
         // Then
-        Assert.Equal(HttpStatusCode.Forbidden, cancel.StatusCode);
-        var current = await employee.Client.GetFromJsonAsync<RentalDto>($"/api/rentals/{rental.Id}");
-        Assert.Equal("Active", current!.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]

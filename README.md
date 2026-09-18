@@ -8,7 +8,7 @@ You only need the .NET 10 SDK. The SQLite database (`carrental.db`) is created b
 
 ## The API
 
-You register and log in to get a JWT. There are two roles: a **customer** can check availability and book a car, and an **employee** can do everything else (cars, customers, rentals, booking for any customer). Errors always come back as problem details JSON.
+You register and log in to get a JWT. There are two roles: a **customer** can check availability, book a car and cancel their own bookings until they start, and an **employee** can do everything else (cars, customers, rentals, booking for any customer). Errors always come back as problem details JSON.
 
 The full list of endpoints with examples is in [docs/API.md](docs/API.md), and there's an OpenAPI file in [docs/openapi.json](docs/openapi.json) in case it's useful to generate the Angular client.
 

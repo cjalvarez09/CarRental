@@ -39,6 +39,7 @@ public class GlobalExceptionHandlerTests
         { new CarNotAvailableException(1, new DateTime(2030, 1, 1), new DateTime(2030, 1, 5)), 409, "Business rule violation" },
         { new CarInUseException(1), 409, "Business rule violation" },
         { new CustomerInUseException(1), 409, "Business rule violation" },
+        { new RentalInProgressException(1), 409, "Business rule violation" },
         { new DomainException("generic rule broken"), 409, "Business rule violation" },
         { new InvalidOperationException("boom"), 500, "An unexpected error occurred" }
     };

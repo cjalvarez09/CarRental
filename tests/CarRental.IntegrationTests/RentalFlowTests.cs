@@ -110,6 +110,85 @@ public class RentalFlowTests(CarRentalApiFactory factory) : IClassFixture<CarRen
     }
 
     [Fact]
+    public async Task Given_ACustomersUpcomingRental_When_TheCustomerCancelsIt_Then_ItIsCancelledAndTheCarIsFreeAgain()
+    {
+        // Given
+        var employee = await factory.RegisterEmployeeAsync();
+        var customer = await factory.RegisterCustomerAsync();
+        var type = TestApi.UniqueCarType();
+        var car = await employee.Client.CreateCarAsync(type);
+        var start = TestApi.FutureDate(10);
+        var end = TestApi.FutureDate(14);
+        var booking = await customer.Client.BookAsync(1, car.Id, start, end);
+        var rental = (await booking.Content.ReadFromJsonAsync<RentalDto>())!;
+
+        // When
+        var cancel = await customer.Client.PostAsync($"/api/rentals/{rental.Id}/cancel", content: null);
+
+        // Then
+        Assert.Equal(HttpStatusCode.NoContent, cancel.StatusCode);
+        var current = await employee.Client.GetFromJsonAsync<RentalDto>($"/api/rentals/{rental.Id}");
+        Assert.Equal("Cancelled", current!.Status);
+        Assert.Contains(car.Id, await customer.Client.AvailableCarIdsAsync(type, start, end));
+    }
+
+    [Fact]
+    public async Task Given_ARentalThatStartsToday_When_TheCustomerCancelsIt_Then_Returns409AndItStaysActive()
+    {
+        // Given
+        var employee = await factory.RegisterEmployeeAsync();
+        var customer = await factory.RegisterCustomerAsync();
+        var car = await employee.Client.CreateCarAsync(TestApi.UniqueCarType());
+        var booking = await customer.Client.BookAsync(1, car.Id, TestApi.FutureDate(0), TestApi.FutureDate(3));
+        var rental = (await booking.Content.ReadFromJsonAsync<RentalDto>())!;
+
+        // When
+        var cancel = await customer.Client.PostAsync($"/api/rentals/{rental.Id}/cancel", content: null);
+
+        // Then
+        Assert.Equal(HttpStatusCode.Conflict, cancel.StatusCode);
+        var current = await employee.Client.GetFromJsonAsync<RentalDto>($"/api/rentals/{rental.Id}");
+        Assert.Equal("Active", current!.Status);
+    }
+
+    [Fact]
+    public async Task Given_ARentalInProgress_When_AnEmployeeCancelsIt_Then_ItIsCancelled()
+    {
+        // Given
+        var employee = await factory.RegisterEmployeeAsync();
+        var customer = await factory.RegisterCustomerAsync();
+        var car = await employee.Client.CreateCarAsync(TestApi.UniqueCarType());
+        var booking = await customer.Client.BookAsync(1, car.Id, TestApi.FutureDate(0), TestApi.FutureDate(3));
+        var rental = (await booking.Content.ReadFromJsonAsync<RentalDto>())!;
+
+        // When
+        var cancel = await employee.Client.PostAsync($"/api/rentals/{rental.Id}/cancel", content: null);
+
+        // Then
+        Assert.Equal(HttpStatusCode.NoContent, cancel.StatusCode);
+    }
+
+    [Fact]
+    public async Task Given_ARentalOfAnotherCustomer_When_TheCustomerTriesToCancelIt_Then_Returns404AndItStaysActive()
+    {
+        // Given
+        var employee = await factory.RegisterEmployeeAsync();
+        var owner = await factory.RegisterCustomerAsync();
+        var intruder = await factory.RegisterCustomerAsync();
+        var car = await employee.Client.CreateCarAsync(TestApi.UniqueCarType());
+        var booking = await owner.Client.BookAsync(1, car.Id, TestApi.FutureDate(10), TestApi.FutureDate(14));
+        var rental = (await booking.Content.ReadFromJsonAsync<RentalDto>())!;
+
+        // When
+        var cancel = await intruder.Client.PostAsync($"/api/rentals/{rental.Id}/cancel", content: null);
+
+        // Then
+        Assert.Equal(HttpStatusCode.NotFound, cancel.StatusCode);
+        var current = await employee.Client.GetFromJsonAsync<RentalDto>($"/api/rentals/{rental.Id}");
+        Assert.Equal("Active", current!.Status);
+    }
+
+    [Fact]
     public async Task Given_ACancelledRental_When_CancellingItAgain_Then_Returns409()
     {
         // Given
