@@ -1,44 +1,59 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working in this repository.
 
-## Project status
+## What this is
 
-This is an early-stage skeleton for a car rental API. Most of the structure exists as empty scaffolding: `CarRental.Application` and `CarRental.Infrastructure` have no source files yet, `CarRental.API` still contains the default ASP.NET template (`WeatherForecastController`), and there are no test files or cross-project references configured in any `.csproj`. Expect to be setting up real wiring (project references, DI, persistence) as part of most tasks here, not just adding to an established pattern.
+Backend for an airport car rental system (technical challenge). A .NET 10 Web API to be consumed by an Angular app. Customers check availability and book cars; employees manage cars, customers and rentals. The core rule: a car can only be rented by one customer at a time.
+
+What the challenge asks for, and it's all in the code: global exception handler, DDD + CQRS, a design pattern (Repository), DI, in-memory cache with invalidation, Docker, authentication, authorization and soft delete. It also asks for descriptive conventional commits (at least 10, done by the developer) and a README section describing the AI-assisted workflow. API docs live in `docs/API.md` (plus `docs/openapi.json`).
 
 ## Solution layout
 
-- `CarRental.slnx` — the solution file (new XML-based `.slnx` format, not `.sln`). Contains:
-  - `src/CarRental.Application` — CQRS commands/queries (MediatR), validators (FluentValidation), and application-layer abstractions
-  - `src/CarRental.API` — ASP.NET Core Web API (`Microsoft.NET.Sdk.Web`), Swashbuckle + `Microsoft.AspNetCore.OpenApi` for Swagger/OpenAPI
-  - `src/CarRental.Domain` — plain class library for domain entities
-  - `src/CarRental.Infrastructure` — plain class library, currently empty
-  - `tests/CarRental.UnitTests` and `tests/CarRental.IntegrationTests` — xUnit projects (xunit, xunit.runner.visualstudio, coverlet.collector), currently with no test files and no reference to the source projects
-- All projects target `net10.0` with `Nullable` and `ImplicitUsings` enabled.
+`CarRental.slnx` (new XML solution format, not `.sln`):
+
+- `src/CarRental.Domain` - plain entities, enums, domain exceptions, repository interfaces. No dependencies.
+- `src/CarRental.Application` - CQRS with MediatR 12.4.1, FluentValidation validators, pipeline behaviors, DTOs, and the abstractions the outer layers implement (`IUnitOfWork`, `ICacheService`, `ICurrentUserService`, `IJwtTokenGenerator`, `IPasswordHasher`).
+- `src/CarRental.Infrastructure` - EF Core + SQLite (`CarRentalDbContext`), repositories, unit of work, memory cache service, JWT generator, password hasher.
+- `src/CarRental.API` - controllers, `GlobalExceptionHandler`, `CurrentUserService`, `Program.cs` (composition root).
+- `tests/CarRental.UnitTests` - xUnit + NSubstitute.
+- `tests/CarRental.IntegrationTests` - xUnit + `WebApplicationFactory<Program>` against a real temporary SQLite file.
+
+References go inward: API -> Application/Infrastructure, Infrastructure -> Application -> Domain.
 
 ## Commands
 
-Build and run from the repository root using the `.slnx` solution file:
-
-```powershell
+```bash
 dotnet build CarRental.slnx
-dotnet run --project src/CarRental.API/CarRental.API.csproj
+dotnet run --project src/CarRental.API          # http://localhost:5255, Swagger at /swagger (Development only)
+dotnet test CarRental.slnx                       # unit + integration
+dotnet format CarRental.slnx --verify-no-changes # must pass; drop the flag to auto-fix
 ```
 
-Run tests (currently no test files exist, so these run 0 tests):
+The SQLite file `carrental.db` is created next to the API (working directory) by `EnsureCreated()` on startup. There are no migrations, so delete the file after changing the model. It's gitignored.
 
-```powershell
-dotnet test tests/CarRental.UnitTests/CarRental.UnitTests.csproj
-dotnet test tests/CarRental.IntegrationTests/CarRental.IntegrationTests.csproj
-```
+## Conventions
 
-Run a single test once tests exist: `dotnet test --filter "FullyQualifiedName~ClassName.MethodName"`.
+- **Entities are plain data.** No validation, no behavior, no factory methods. Input validation goes in FluentValidation validators (one per command, in the same folder as the command). Rules that need persisted state (overlap, "already cancelled", "in use") go in the handlers and throw domain exceptions.
+- **Vertical slices in Application**: `Feature/Commands|Queries/Name/{Command, Validator, Handler}`. Handlers use repositories + `IUnitOfWork.SaveChangesAsync`.
+- **Error mapping** (`GlobalExceptionHandler`): `ValidationException` 400, `NotFoundException` 404, `InvalidCredentialsException` 401 (must stay before the `DomainException` case), any other `DomainException` 409, everything else 500 with a generic message. Bodies are ProblemDetails.
+- **Authorization**: two roles, `Customer` and `Employee`. Always use the `Roles` constants, never string literals. Class-level and method-level `[Authorize]` attributes combine with AND, so controllers use a plain class-level `[Authorize]` and add `[Authorize(Roles = Roles.Employee)]` only on the Employee-only actions.
+- **Tests** are named `Given_..._When_..._Then_...` and have `// Given`, `// When`, `// Then` blocks. Plain xUnit `Assert` and NSubstitute on purpose (FluentAssertions went paid, Moq had the SponsorLink issue).
+- Code style is in `.editorconfig` (LF, file-scoped namespaces, primary constructors, Allman braces).
+- Conventional commits. Don't commit unless asked.
 
-## Domain model (`CarRental.Domain.Entities`)
+## Things that already bit us
 
-- `Car` — `Id`, `Type`, `Model`, `Services` (`HashSet<Service>`)
-- `Customer` — `Id`, `FullName`, `Address`, `Email`
-- `Rental` — `Id`, `Customer`, `StartDate`, `EndDate`, `Car`
-- `Service` — `Id`, `Date`
+- **MediatR 12 void commands**: `IRequest` no longer inherits `IRequest<Unit>`, so a behavior constrained with `where TRequest : IRequest<TResponse>` is silently skipped for void commands (no validation, no cache invalidation). Behaviors use `where TRequest : notnull`. `MediatRPipelineTests` covers this.
+- **Cache**: pipeline order is Validation, Caching, CacheInvalidation. Queries opt in by implementing `ICacheableQuery` (key, tags), commands invalidate by implementing `ICacheInvalidatingCommand`. Tags are `cars`, `customers`, `rentals`. Rental commands also invalidate `cars` because availability depends on rentals, and `RegisterCommand` invalidates `customers`. A new command or query that doesn't declare its tags means stale reads. `MemoryCacheService` must stay a singleton (it keeps the per-tag `CancellationTokenSource`s).
+- **ValidationBehaviour** creates one `ValidationContext` per validator. A shared one duplicates errors when a request has several validators.
+- **Error responses**: `GlobalExceptionHandler` writes the JSON itself with `WriteAsJsonAsync(..., contentType: "application/problem+json")`. `IProblemDetailsService.TryWriteAsync` negotiates against `Accept` and failed for Swagger UI's `Accept: text/plain`, and `WriteAsJsonAsync` overwrites `ContentType` unless you pass it. `UseStatusCodePages()` gives 401/403/route-404 responses a body.
+- **Swashbuckle 10 uses Microsoft.OpenApi v2**: types are in the `Microsoft.OpenApi` namespace (not `.Models`) and the security requirement is built with `AddSecurityRequirement(document => ...)` and `OpenApiSecuritySchemeReference`.
+- **Soft delete**: `Car` and `Customer` implement `ISoftDelete`; the global query filter is applied by reflection in `CarRentalDbContext.ApplySoftDeleteQueryFilters`. Repository `Remove` methods just set the flags (deliberately not shared through a helper). Deleting a car/customer with any rental throws `CarInUseException`/`CustomerInUseException`, which is also why the EF Core warning about `Rental`'s required navigations is suppressed in `AddInfrastructure`.
+- **Users and customers**: a `Customer` user has `User.CustomerId` and the JWT carries a `customerId` claim. `RegisterRentalCommandHandler` uses the caller's own customer when the caller is a Customer, whatever `customerId` came in the body. Employees have no linked profile. `POST /api/customers` creates a profile without a user on purpose (see README).
+- `WebApplicationFactory` needs `public partial class Program;` at the end of `Program.cs`. Keep it.
 
-These are plain data classes (no behavior, no EF Core annotations/configuration yet). `CarRental.Application` and `CarRental.Infrastructure` don't yet reference `CarRental.Domain` or each other — when adding logic, wire up the intended layering (`API` → `CarRental.Application` → `CarRental.Domain`, `CarRental.Infrastructure` implementing `CarRental.Application` abstractions) via `ProjectReference` entries as needed rather than assuming it's already in place.
+## Working notes
+
+- When starting the API to test something by hand, stop it by PID (find it with `Get-NetTCPConnection -LocalPort <port>`), never with `taskkill /IM dotnet.exe`, and delete `carrental.db*` afterwards.
+- `Jwt:Secret` in `appsettings.json` is a development secret checked in on purpose so the project runs without setup. Known simplifications are listed in the README; check there before "fixing" one of them.
