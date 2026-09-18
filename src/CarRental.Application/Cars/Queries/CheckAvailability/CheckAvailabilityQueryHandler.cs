@@ -1,3 +1,4 @@
+using CarRental.Application.Common.Mappings;
 using CarRental.Application.Common.Models;
 using CarRental.Domain.Repositories;
 using MediatR;

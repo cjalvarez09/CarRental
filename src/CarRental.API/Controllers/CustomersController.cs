@@ -1,3 +1,4 @@
+using CarRental.API.Requests;
 using CarRental.Application.Common.Models;
 using CarRental.Application.Customers.Commands.DeleteCustomer;
 using CarRental.Application.Customers.Commands.RegisterCustomer;
@@ -74,5 +75,3 @@ public class CustomersController(ISender sender) : ControllerBase
         return NoContent();
     }
 }
-
-public record UpdateCustomerRequest(string FullName, string Address, string Email);

@@ -1,3 +1,4 @@
+using CarRental.API.Requests;
 using CarRental.Application.Cars.Commands.CreateCar;
 using CarRental.Application.Cars.Commands.DeleteCar;
 using CarRental.Application.Cars.Commands.UpdateCar;
@@ -87,5 +88,3 @@ public class CarsController(ISender sender) : ControllerBase
         return NoContent();
     }
 }
-
-public record UpdateCarRequest(string Type, string Model);

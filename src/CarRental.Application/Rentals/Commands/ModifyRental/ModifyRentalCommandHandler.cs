@@ -1,5 +1,6 @@
 using CarRental.Application.Common.Exceptions;
 using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Common.Mappings;
 using CarRental.Application.Common.Models;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;

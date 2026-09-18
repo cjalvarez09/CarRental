@@ -4,8 +4,6 @@ using CarRental.Application.Common.Models;
 
 namespace CarRental.IntegrationTests.Infrastructure;
 
-public sealed record TestUser(HttpClient Client, string Username, string Email);
-
 public static class TestApi
 {
     public const string Password = "Secret123";

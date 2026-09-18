@@ -35,6 +35,7 @@ The SQLite file `carrental.db` is created next to the API (working directory) by
 ## Conventions
 
 - **Entities are plain data.** No validation, no behavior, no factory methods. Input validation goes in FluentValidation validators (one per command, in the same folder as the command). Rules that need persisted state (overlap, "already cancelled", "in use") go in the handlers and throw domain exceptions.
+- **One type per file.** Request bodies that only the API uses live in `CarRental.API/Requests`, not in the controllers, and entity-to-DTO extension methods live in `Application/Common/Mappings` (handlers need `using CarRental.Application.Common.Mappings;` to call `ToDto()`). Small private test doubles nested inside a test class are the only exception.
 - **Vertical slices in Application**: `Feature/Commands|Queries/Name/{Command, Validator, Handler}`. Handlers use repositories + `IUnitOfWork.SaveChangesAsync`.
 - **Error mapping** (`GlobalExceptionHandler`): `ValidationException` 400, `NotFoundException` 404, `InvalidCredentialsException` 401 (must stay before the `DomainException` case), any other `DomainException` 409, everything else 500 with a generic message. Bodies are ProblemDetails.
 - **Cancelling rentals**: employees can cancel any rental; a customer can only cancel their own (someone else's answers 404) and only if it starts after today (`RentalInProgressException`, 409). The check lives in `CancelRentalCommandHandler`, which is why `POST /rentals/{id}/cancel` has no role restriction.

@@ -1,3 +1,4 @@
+using CarRental.API.Requests;
 using CarRental.Application.Common.Models;
 using CarRental.Application.Rentals.Commands.CancelRental;
 using CarRental.Application.Rentals.Commands.ModifyRental;
@@ -61,5 +62,3 @@ public class RentalsController(ISender sender) : ControllerBase
         return NoContent();
     }
 }
-
-public record ModifyRentalRequest(DateTime StartDate, DateTime EndDate);

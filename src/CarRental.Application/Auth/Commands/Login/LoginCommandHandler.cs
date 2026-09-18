@@ -1,4 +1,5 @@
 using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Common.Mappings;
 using CarRental.Application.Common.Models;
 using CarRental.Domain.Exceptions;
 using CarRental.Domain.Repositories;
