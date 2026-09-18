@@ -20,13 +20,16 @@ public class JwtTokenGenerator(IConfiguration configuration) : IJwtTokenGenerato
 
         var expiresAtUtc = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.Username),
+            new(ClaimTypes.Role, user.Role.ToString())
         };
+
+        if (user.CustomerId is not null)
+            claims.Add(new Claim("customerId", user.CustomerId.Value.ToString()));
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);

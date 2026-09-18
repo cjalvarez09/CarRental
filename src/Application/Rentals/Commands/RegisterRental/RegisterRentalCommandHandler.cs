@@ -13,13 +13,16 @@ public class RegisterRentalCommandHandler(
     ICustomerRepository customerRepository,
     ICarRepository carRepository,
     IRentalRepository rentalRepository,
+    ICurrentUserService currentUserService,
     IUnitOfWork unitOfWork)
     : IRequestHandler<RegisterRentalCommand, RentalDto>
 {
     public async Task<RentalDto> Handle(RegisterRentalCommand request, CancellationToken cancellationToken)
     {
-        var customer = await customerRepository.GetByIdAsync(request.CustomerId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Customer), request.CustomerId);
+        var customerId = ResolveCustomerId(request.CustomerId);
+
+        var customer = await customerRepository.GetByIdAsync(customerId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Customer), customerId);
 
         var car = await carRepository.GetByIdAsync(request.CarId, cancellationToken)
             ?? throw new NotFoundException(nameof(Car), request.CarId);
@@ -45,5 +48,16 @@ public class RegisterRentalCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return rental.ToDto();
+    }
+
+    private int ResolveCustomerId(int requestedCustomerId)
+    {
+        if (!string.Equals(currentUserService.Role, Roles.Customer, StringComparison.Ordinal))
+            return requestedCustomerId;
+
+        // A Customer can only ever book for themselves - ignore whatever CustomerId the
+        // request body carries and use the one linked to their own account instead.
+        return currentUserService.CustomerId
+            ?? throw new DomainException("Your account is not linked to a customer profile.");
     }
 }

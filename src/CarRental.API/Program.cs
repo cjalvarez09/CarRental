@@ -1,6 +1,8 @@
 using System.Text;
 using CarRental.API.ExceptionHandling;
+using CarRental.API.Security;
 using CarRental.Application;
+using CarRental.Application.Common.Interfaces;
 using CarRental.Infrastructure;
 using CarRental.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -39,6 +41,9 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -21,9 +21,20 @@ public class CarRentalDbContext(DbContextOptions<CarRentalDbContext> options) : 
             .HasForeignKey("CarId")
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<User>()
-            .HasIndex(user => user.Username)
-            .IsUnique();
+        modelBuilder.Entity<User>(builder =>
+        {
+            builder.HasIndex(user => user.Username)
+                .IsUnique();
+
+            // A Customer-role user is linked 1:1 to its Customer profile; Employees leave this null.
+            builder.HasIndex(user => user.CustomerId)
+                .IsUnique();
+
+            builder.HasOne<Customer>()
+                .WithMany()
+                .HasForeignKey(user => user.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
 
         modelBuilder.Entity<Rental>(builder =>
         {

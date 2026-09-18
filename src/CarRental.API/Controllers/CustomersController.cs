@@ -39,8 +39,10 @@ public class CustomersController(ISender sender) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.Employee)]
     [ProducesResponseType(typeof(CustomerDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<CustomerDto>> Register(RegisterCustomerCommand command, CancellationToken cancellationToken)
     {
         var customer = await sender.Send(command, cancellationToken);

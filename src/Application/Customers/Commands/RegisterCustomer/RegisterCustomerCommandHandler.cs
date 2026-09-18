@@ -11,6 +11,9 @@ public class RegisterCustomerCommandHandler(ICustomerRepository customerReposito
 {
     public async Task<CustomerDto> Handle(RegisterCustomerCommand request, CancellationToken cancellationToken)
     {
+        // This only creates the Customer profile, with no linked User (unlike self-registration
+        // via /api/auth/register). In a real system this should also generate a temporary password
+        // and email the customer an activation link so they can claim a login for this profile.
         var customer = new Customer
         {
             FullName = request.FullName,
